@@ -1,78 +1,33 @@
 #!/bin/env bash
 
 f{()
-{ # revision 1.0
+{ # revision 2.0
 # This function are licensed under GNU GPL-2.0-only
 # Using this function will enforce you to follow the GNU GPL-2.0-only license.
 
-	if [ "$3" = "}" ]; then
-		:
-	elif [ "$4" = "}" ]; then
-		:
-	elif [ "$5" = "}" ]; then
-		echo "missing qoutes: f{" $@
-		return 1
-	else
-		echo "missing close brace: f{" $@
-		return 1
-	fi
 		local x
 		local y
-		local m
-	if [[ "$1" = "-"* ]] && [[ "$2" = *" || "* ]]; then
-		x="${2% ||*}"
-		y="${2##*|| }"
-		o="$1"
-		m="1o"
-		#echo "x: '$x' y: '$y' o: '$o'"
-	elif [[ "$1" = "-"* ]] && [[ "$2" = *" && "* ]]; then
-		x="${2% &&*}"
-		y="${2##*&& }"
-		o="$1"
-		m="1n"
-		#echo "x: '$x' y: '$y' o: '$o'"
-	elif [[ "$1" != "-"* ]] && [[ "$3" = *" || "* ]]; then
-		x="$1"
-		y="$3"
-		o="$2"
-		m="2o"
-	elif [[ "$1" != "-"* ]] && [[ "$3" = *" && "* ]]; then
-		x="$1"
-		y="$3"
-		o="$2"
-		m="2n"
-	else
-		echo "incorrect syntax: f{" $@; return 1
+		y=""
+	if [ "${1:0:1}" != "-" ]; then
+		for x in "${@:3}"; do
+			if [ "$x" = "}" ]; then test "$1" "$2" "$y"; return
+			elif [ "$x" != "AND" ] && [ "$x" != "OR" ]; then y="$x"; continue
+			elif [ "$x" = "OR" ]; then if test "$1" "$2" "$y"; then return 0; else continue; fi
+			elif [ "$x" = "AND" ]; then if test "$1" "$2" "$y"; then continue; else return 1; fi; fi
+		done
+	elif [ "${1:0:1}" = "-" ] && [ "${1:2:1}" = "" ]; then
+		for x in "${@:2}"; do
+			if [ "$x" = "}" ]; then test "$1" "$y"; return
+			elif [ "$x" != "AND" ] && [ "$x" != "OR" ]; then y="$x"; continue
+			elif [ "$x" = "OR" ]; then if test "$1" "$y"; then return 0; else continue; fi
+			elif [ "$x" = "AND" ]; then if test "$1" "$y"; then continue; else return 1; fi; fi
+		done
+	elif [ "${1:0:1}" = "-" ] && [ "${1:3:1}" = "" ]; then
+		for x in "${@:2}"; do
+			if [ "$x" = "}" ]; then test "${1:0:1}${1:1:1}" "$y" && test "${1:0:1}${1:2:1}" "$y"; return
+			elif [ "$x" != "AND" ] && [ "$x" != "OR" ]; then y="$x"; continue
+			elif [ "$x" = "OR" ]; then if test "${1:0:1}${1:1:1}" "$y" && test "${1:0:1}${1:2:1}" "$y"; then return 0; else continue; fi
+			elif [ "$x" = "AND" ]; then if test "${1:0:1}${1:1:1}" "$y" && test "${1:0:1}${1:2:1}" "$y"; then continue; else return 1; fi; fi
+		done
 	fi
-
-	if [ "$m" = "1o" ]; then
-		if [ "$o" = "-z" ]; then if [ -z "$x" ] || [ -z "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-n" ]; then if [ -n "$x" ] || [ -n "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-f" ]; then if [ -f "$x" ] || [ -f "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-d" ]; then if [ -d "$x" ] || [ -d "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-s" ]; then if [ -s "$x" ] || [ -s "$y" ]; then return 0; else return 1; fi
-		else echo "unspecified opreator: '$o'"; return 1
-		fi
-	elif [ "$m" = "1n" ]; then
-		if [ "$o" = "-z" ]; then if [ -z "$x" ] && [ -z "$x" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-n" ]; then if [ -n "$x" ] && [ -n "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-f" ]; then if [ -f "$x" ] && [ -f "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-d" ]; then if [ -d "$x" ] && [ -d "$y" ]; then return 0; else return 1; fi
-		elif [ "$o" = "-s" ]; then if [ -s "$x" ] && [ -s "$y" ]; then return 0; else return 1; fi
-		else echo "unspecified opreator: '$o'"; return 1
-		fi
-	elif [ "$m" = "2o" ]; then
-		if [ "$o" = "=" ]; then if [[ "$y" = "$x ||"* ]] || [[ "$y" = *"|| $x" ]]; then return 0; else return 1; fi
-		elif [ "$o" = "!=" ]; then if [[ "$y" != "$x ||"* ]] || [[ "$y" != *"|| $x" ]]; then return 0; else return 1; fi
-		else echo "unspecified opreator: '$o'"; return 1
-		fi
-	elif [ "$m" = "2n" ]; then
-		if [ "$o" = "=" ]; then if [[ "$y" = "$x &&"* ]] && [[ "$y" = *"&& $x" ]]; then return 0; else return 1; fi
-		elif [ "$o" = "!=" ]; then if [[ "$y" != "$x &&"* ]] && [[ "$y" != *"&& $x" ]]; then return 0; else return 1; fi
-		else echo "unspecified opreator: '$o'"; return 1
-		fi
-	else
-		echo "unexpected operation: f{" $@; return 1
-	fi
-
 }

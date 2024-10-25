@@ -19,63 +19,80 @@ source bracef
 
 **quick testing:**
 ```Bash
-f{ x = "y || x" }; echo $?
+f{ x = y OR x }; echo $?
 0
 
-f{ x = "y && z" }; echo $?
+f{ x = y AND z }; echo $?
 1
 
-f{ x != "y || z" }; echo $?
+f{ x != y AND z }; echo $?
 1
 ```
 
 **practial testing:**
 
-`Note: Do not call it from the script, instead include the function itself.`
+> Note: Do not call it from the script, instead include the whole function itself.
 
+
+**Check if both files exists.**
+**returns false if first one does not exists:**
 ```Bash
 x=~/.gitconfig
 y=~/.git-credentials
 
-if f{ -f "$x && $y" }; then
-	echo "both $x and $y are exist."
+if f{ -f "$x" AND "$y" }; then
+	echo "both '$x' and '$y' are exist."
 else
-	echo "error missing $x or $y or either both files."
+	echo "error missing the file '$x'."
 fi
 ```
 
+**Check if both files exists and not empty.**
+**returns false if first one does not exists or empty:**
 ```Bash
-x="crab is crap"
-y="charcoal is coal"
-z="crab is crap"
+if f{ -fs "$x" AND "$y" }; then
+	echo "both '$x' and '$y' are exist and not empty."
+else
+	echo "error the file '$x' is missing or it's empty."
+fi
+```
 
-if f{ "$x" =  "$y || $z" }; then
+**Check if variable x are equal to variable y or z.**
+**returns false if both y or z are not equal to x:**
+```Bash
+x="crab is not crap"
+y="charcoal is coal"
+z="crab is not crap"
+
+if f{ "$x" =  "$y " OR "$z" }; then
 	echo " '$x' are either equals to '$y' or '$z'."
 else
 	echo " '$x' does not equals to '$y' or '$z'."
 fi
 ```
 
+**Another one (try to guess what it's compares);**
 ```Bash
 x="text"
 y="$(echo -n "$x" | sed 's/xt/rm/')"
+z="$(echo -n "$x" | sed 's/x/s/')"
 
-if f{ "$(echo -n "$x" | sed 's/x/s/')" = "$x || $y" }; then
-	z="$(echo -n "$x" | sed 's/x/s/')"
+if f{ "$(echo -n "$x" | sed 's/x/s/')" = "$x" OR "$y" }; then
 	echo "the word '$x' are either equals to '$y' or '$z'."
 else
-	z="$(echo -n "$x" | sed 's/x/s/')"
 	echo "the word '$x' are not equal to '$y' or '$z'."
 fi
 ```
 
 **Speed test:**
 
-```Bash
-time f{ x = "y && z" }; echo code:$?
+> FYI current revision are 1 nano second faster than previous revision.
 
-real    0m0.002s
-user    0m0.002s
+```Bash
+time f{ x = y AND z }; echo code:$?
+
+real    0m0.001s
+user    0m0.001s
 sys     0m0.000s
 code:1
 
